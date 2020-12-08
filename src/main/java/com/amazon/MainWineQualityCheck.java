@@ -32,7 +32,7 @@ public class MainWineQualityCheck {
 
         StringBuffer schema = new StringBuffer();
         try {
-            String schemaFile = "/Users/hc/Downloads/wine-schema.json";
+            String schemaFile = "/Users/hc/Assignment2/wine-schema.json";
 
             try (BufferedReader reader = new BufferedReader(new FileReader(schemaFile))) {
                 reader.lines().forEach(line -> schema.append(line + "\n"));
@@ -48,7 +48,7 @@ public class MainWineQualityCheck {
                 .schema(structType)
                 .option("header", true)
                 .option("delimiter", ";")
-                .option("path", "/Users/hc/Downloads/TrainingDataset.csv")
+                .option("path", "/Users/hc/Assignment2/TrainingDataset.csv")
                 .load();
 
         String[] featureCols = new String[]{"fixedAcidity", "volatileAcidity", "citricAcid", "residualSugar", "chlorides", "freeSulfurDioxide",
@@ -69,7 +69,7 @@ public class MainWineQualityCheck {
                 .schema(structType)
                 .option("header", true)
                 .option("delimiter", ";")
-                .option("path", "/Users/hc/Downloads/ValidationDataset.csv")
+                .option("path", "/Users/hc/Assignment2/ValidationDataset.csv")
                 .load();
 
         System.out.println("Printing ValidationDataset...");
