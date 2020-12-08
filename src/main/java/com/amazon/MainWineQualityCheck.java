@@ -55,12 +55,12 @@ public class MainWineQualityCheck {
                 "totalSulfurDioxide", "density", "pH", "sulphates", "alcohol"};
 
         VectorAssembler assembler = new VectorAssembler().setInputCols(featureCols).setOutputCol("features");
-        Dataset<Row> df2 = assembler.transform(TrainingDataset);
-        System.out.println("Printing df2...");
-        df2.show(10, false);
+        Dataset<Row> df1 = assembler.transform(TrainingDataset);
+        System.out.println("Printing df1...");
+        df1.show(10, false);
 
         StringIndexer label = new StringIndexer().setInputCol("quality").setOutputCol("label");
-        Dataset<Row> filterWineDf = label.fit(df2).transform(df2);
+        Dataset<Row> filterWineDf = label.fit(df1).transform(df1);
         System.out.println("Printing filterWineDf...");
         filterWineDf.show(10, false);
 
@@ -76,11 +76,11 @@ public class MainWineQualityCheck {
         ValidationDataset.show(10, false);
 
 
-        Dataset<Row> df4 = assembler.transform(ValidationDataset);
-        System.out.println("Printing df4...");
-        df4.show(10, false);
+        Dataset<Row> df = assembler.transform(ValidationDataset);
+        System.out.println("Printing df...");
+        df.show(10, false);
 
-        Dataset<Row> filValidationDataDf = label.fit(df4).transform(df4);
+        Dataset<Row> filValidationDataDf = label.fit(df).transform(df);
         System.out.println("Printing filValidationDataDf...");
         filValidationDataDf.show(10, false);
 
