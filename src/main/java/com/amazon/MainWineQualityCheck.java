@@ -1,6 +1,5 @@
 package com.amazon;
 
-
         import org.apache.spark.api.java.JavaSparkContext;
         import org.apache.spark.ml.Pipeline;
         import org.apache.spark.ml.PipelineStage;
@@ -16,7 +15,6 @@ package com.amazon;
         import org.apache.spark.mllib.evaluation.MulticlassMetrics;
         import org.apache.spark.sql.*;
         import org.apache.spark.sql.types.StructType;
-
         import java.io.BufferedReader;
         import java.io.FileReader;
 
@@ -24,7 +22,7 @@ public class MainWineQualityCheck {
     public static void main(String[] args) {
 
                 SparkSession spark = SparkSession.builder()
-                .master("local[*]")
+                .master("spark://ip-172-31-27-213.ec2.internal:7077")
                 .appName("Wine Quality Check")
                 .getOrCreate();
         JavaSparkContext jsc = new JavaSparkContext(spark.sparkContext());
@@ -56,13 +54,9 @@ public class MainWineQualityCheck {
 
         VectorAssembler assembler = new VectorAssembler().setInputCols(featureCols).setOutputCol("features");
         Dataset<Row> df1 = assembler.transform(TrainingDataset);
-        System.out.println("Printing df1...");
-        df1.show(10, false);
 
         StringIndexer label = new StringIndexer().setInputCol("quality").setOutputCol("label");
         Dataset<Row> filterWineDf = label.fit(df1).transform(df1);
-        System.out.println("Printing filterWineDf...");
-        filterWineDf.show(10, false);
 
         Dataset<Row> ValidationDataset = spark.read()
                 .format("csv")
@@ -72,36 +66,22 @@ public class MainWineQualityCheck {
                 .option("path", "/Users/hc/Assignment2/ValidationDataset.csv")
                 .load();
 
-        System.out.println("Printing ValidationDataset...");
-        ValidationDataset.show(10, false);
-
-
         Dataset<Row> df = assembler.transform(ValidationDataset);
-        System.out.println("Printing df...");
-        df.show(10, false);
-
         Dataset<Row> filValidationDataDf = label.fit(df).transform(df);
-        System.out.println("Printing filValidationDataDf...");
-        filValidationDataDf.show(10, false);
 
         DecisionTreeClassifier decisionTreeClassifier = new DecisionTreeClassifier().setImpurity("gini").setMaxDepth(3).setSeed(5043);
         DecisionTreeClassificationModel model = decisionTreeClassifier.fit(filterWineDf);
         MulticlassClassificationEvaluator evalutor = new MulticlassClassificationEvaluator().setLabelCol("label");
         Dataset<Row> predictDf = model.transform(filValidationDataDf);
-        System.out.println("Printing predictDf...");
-        predictDf.show(10, false);
 
-        System.out.println("Printing predictions label...");
+        System.out.println("Predictions label...");
         predictDf.select("prediction", "label").show(false);
 
         MulticlassMetrics metrics = new MulticlassMetrics(predictDf.select("prediction", "label"));
-        System.out.println("Weighted F1 score before:" + metrics.weightedFMeasure());
-        System.out.println("Weighted precision before:" + metrics.weightedPrecision());
+        System.out.println("F1 score before:" + metrics.weightedFMeasure());
+        System.out.println("Precision before:" + metrics.weightedPrecision());
 
-        ParamMap[] paramMaps = new ParamGridBuilder()
-               // .addGrid(decisionTreeClassifier.maxBins(), new int[]{25, 31})
-               // .addGrid(decisionTreeClassifier.maxDepth(), new int[]{5, 10})
-                .build();
+        ParamMap[] paramMaps = new ParamGridBuilder().build();
 
         Pipeline sparkPipeline = new Pipeline().setStages(new PipelineStage[]{decisionTreeClassifier});
 
@@ -115,10 +95,10 @@ public class MainWineQualityCheck {
         Dataset<Row> predictions2 = crossValidatorModel.transform(filValidationDataDf);
 
         MulticlassMetrics multiclassMetrics = new MulticlassMetrics(predictions2.select("prediction", "label"));
-        System.out.println("Weighted F1 score After:" + multiclassMetrics.weightedFMeasure());
-        System.out.println("Weighted precision After:"+ multiclassMetrics.weightedPrecision());
-        System.out.println("Weighted false positive rate After:"+ multiclassMetrics.weightedFalsePositiveRate());
-        System.out.println("Weighted recall After:"+ multiclassMetrics.weightedRecall());
+        System.out.println("F1 score After:" + multiclassMetrics.weightedFMeasure());
+        System.out.println("Precision After:"+ multiclassMetrics.weightedPrecision());
+        System.out.println("False positive rate After:"+ multiclassMetrics.weightedFalsePositiveRate());
+        System.out.println("Recall After:"+ multiclassMetrics.weightedRecall());
 
     }
 }
